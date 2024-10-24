@@ -19,9 +19,9 @@ env:
   GODOT_VERSION: 4.3
 
 jobs:
-  export-web:
-    name: Web Export
-    runs-on: ubuntu-24.04
+  build-web:
+    name: Build for web
+    runs-on: ubuntu-latest
     container:
       image: barichello/godot-ci:4.3
     steps:
@@ -30,7 +30,7 @@ jobs:
         with:
           lfs: true
 
-      - name: Setup
+      - name: Set up export templates
         run: |
           mkdir -v -p ~/.local/share/godot/export_templates/
           mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
@@ -46,14 +46,24 @@ jobs:
           name: web
           path: build/web
 
-      - id: check-gh-pages
-        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+  publish-gh-pages:
+    name: Publish to GitHub Pages
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if enabled
+        id: check-gh-pages
         run: |
           if ( gh api "repos/${{ github.repository }}/pages" | jq --exit-status '.build_type == "workflow"' )
           then
               echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
-              echo "This repository does not have GitHub Pages configured with GitHub Actions as its source; check the [repository settings](https://github.com/${{ github.repository }}/settings/pages)" >> "$GITHUB_STEP_SUMMARY"
+              cat <<"EOF" >> "$GITHUB_STEP_SUMMARY"
+              ## Not published to GitHub Pages
+
+              This repository does not have GitHub Pages enabled, with GitHub Actions as its source.
+              Check the [repository settings](https://github.com/${{ github.repository }}/settings/pages).
+              EOF
               echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -68,4 +78,3 @@ jobs:
         if: ${{ steps.deploy-to-gh-pages.outcome == 'success' }}
         run: |
           echo "Game published to: <${{ steps.deploy-to-gh-pages.outputs.page_url }}>" >>$GITHUB_STEP_SUMMARY
-
