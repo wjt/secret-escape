@@ -46,34 +46,41 @@ jobs:
           name: web
           path: build/web
 
-  publish-gh-pages:
-    name: Publish to GitHub Pages
+  check-gh-pages:
+    name: Check if GitHub Pages is enabled
     if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-    needs:
-      - build-web
     runs-on: ubuntu-latest
     steps:
-      # - name: Check if enabled
-      #   id: check-gh-pages
-      #   run: |
-      #     if ( gh api "repos/${{ github.repository }}/pages" | jq --exit-status '.build_type == "workflow"' )
-      #     then
-      #         echo "enabled=true" >> "$GITHUB_OUTPUT"
-      #     else
-      #         cat <<"EOF" >> "$GITHUB_STEP_SUMMARY"
-      #         ## Not published to GitHub Pages
+      - name: Check
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run:
+          if output=$( gh api "repos/${{ github.repository }}/pages" )
+          then
+            if echo "$output" | jq --exit-status '.build_type == "workflow"'
+            then
+              echo "enabled=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "build type must be workflow"
+            if
+          else
+            echo "Pages not enabled"
+            echo "$output"
+          fi
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
 
-      #         This repository does not have GitHub Pages enabled, with GitHub Actions as its source.
-      #         Check the [repository settings](https://github.com/${{ github.repository }}/settings/pages).
-      #     EOF
-      #         echo "enabled=false" >> "$GITHUB_OUTPUT"
-      #     fi
-      #   env:
-      #     GH_TOKEN: ${{ github.token }}
-
+  publish-gh-pages:
+    name: Publish to GitHub Pages
+    needs:
+      - build-web
+      - check-gh-pages
+    if: ${{ jobs.check-gh-pages.outputs.enabled == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
       - id: deploy-to-gh-pages
         name: Deploy to GitHub Pages
-          #  if: ${{ steps.check-gh-pages.enabled == 'true' }}
         uses: actions/deploy-pages@v4
         with:
           artifact_name: web
