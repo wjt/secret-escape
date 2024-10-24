@@ -33,7 +33,7 @@ jobs:
           then
             if echo "$output" | jq --exit-status '.build_type == "workflow"'
             then
-              echo "enabled=true"
+              echo "enabled=true" >> "$GITHUB_OUTPUT"
             else
               echo "GitHub Pages source must be set to GitHub Actions" >> "$GITHUB_STEP_SUMMARY"
             fi
