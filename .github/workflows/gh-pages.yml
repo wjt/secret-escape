@@ -29,20 +29,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if output=$( gh api "repos/${{ github.repository }}/pages" )
+          if gh api "repos/${{ github.repository }}/pages" | jq --exit-status '.build_type == "workflow"'
           then
-            if echo "$output" | jq --exit-status '.build_type == "workflow"'
-            then
               echo "enabled=true" >> "$GITHUB_OUTPUT"
-            else
+          else
               echo "# Not published to GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
-              echo "Check that the source is set to GitHub Actions in the [repository settings](https://github.com/${{ github.repository }}/settings/pages)." >> "$GITHUB_STEP_SUMMARY"
-            fi
-          else
-            echo "# Not published to GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Check that GitHub Pages is enabled in the [repository settings](https://github.com/${{ github.repository }}/settings/pages)." >> "$GITHUB_STEP_SUMMARY"
+              echo "Check that Pages is enabled, with the source set to GitHub Actions, in the" >> "$GITHUB_STEP_SUMMARY"
+              echo "[repository settings](https://github.com/${{ github.repository }}/settings/pages)." >> "$GITHUB_STEP_SUMMARY"
           fi
     outputs:
       enabled: ${{ steps.check.outputs.enabled }}
