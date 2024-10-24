@@ -19,8 +19,35 @@ env:
   GODOT_VERSION: 4.3
 
 jobs:
+  check-gh-pages:
+    name: Check if GitHub Pages is enabled
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if output=$( gh api "repos/${{ github.repository }}/pages" )
+          then
+            if echo "$output" | jq --exit-status '.build_type == "workflow"'
+            then
+              echo "enabled=true"
+            else
+              echo "GitHub Pages source must be set to GitHub Actions" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            echo "GitHub Pages not enabled" >> "$GITHUB_STEP_SUMMARY"
+          fi
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+
   build-web:
     name: Build for web
+    needs:
+      - check-gh-pages
+    if: ${{ needs.check-gh-pages.outputs.enabled }}
     runs-on: ubuntu-latest
     container:
       image: barichello/godot-ci:4.3
@@ -46,37 +73,10 @@ jobs:
           name: web
           path: build/web
 
-  check-gh-pages:
-    name: Check if GitHub Pages is enabled
-    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check
-        id: check
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run:
-          if output=$( gh api "repos/${{ github.repository }}/pages" )
-          then
-            if echo "$output" | jq --exit-status '.build_type == "workflow"'
-            then
-              echo "enabled=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "build type must be workflow"
-            fi
-          else
-            echo "Pages not enabled"
-            echo "$output"
-          fi
-    outputs:
-      enabled: ${{ steps.check.outputs.enabled }}
-
   publish-gh-pages:
     name: Publish to GitHub Pages
     needs:
       - build-web
-      - check-gh-pages
-    if: ${{ needs.check-gh-pages.outputs.enabled }}
     runs-on: ubuntu-latest
     steps:
       - id: deploy-to-gh-pages
