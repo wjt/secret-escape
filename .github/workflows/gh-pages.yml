@@ -76,7 +76,7 @@ jobs:
     needs:
       - build-web
       - check-gh-pages
-    if: ${{ jobs.check-gh-pages.outputs.enabled == 'true' }}
+    if: ${{ needs.check-gh-pages.outputs.enabled }}
     runs-on: ubuntu-latest
     steps:
       - id: deploy-to-gh-pages
