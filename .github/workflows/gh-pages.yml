@@ -35,10 +35,14 @@ jobs:
             then
               echo "enabled=true" >> "$GITHUB_OUTPUT"
             else
-              echo "GitHub Pages source must be set to GitHub Actions" >> "$GITHUB_STEP_SUMMARY"
+              echo "# Not published to GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "Check that the source is set to GitHub Actions in the [repository settings](https://github.com/${{ github.repository }}/settings/pages)." >> "$GITHUB_STEP_SUMMARY"
             fi
           else
-            echo "GitHub Pages not enabled" >> "$GITHUB_STEP_SUMMARY"
+            echo "# Not published to GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Check that GitHub Pages is enabled in the [repository settings](https://github.com/${{ github.repository }}/settings/pages)." >> "$GITHUB_STEP_SUMMARY"
           fi
     outputs:
       enabled: ${{ steps.check.outputs.enabled }}
