@@ -46,9 +46,20 @@ jobs:
           name: web
           path: build/web
 
+      - id: check-gh-pages
+        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+        run: |
+          if ( gh api "repos/${{ github.repository }}/pages" | jq --exit-status '.build_type == "workflow"' )
+          then
+              echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "This repository does not have GitHub Pages configured with GitHub Actions as its source; check the [repository settings](https://github.com/${{ github.repository }}/settings/pages)" >> "$GITHUB_STEP_SUMMARY"
+              echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - id: deploy-to-gh-pages
         name: Deploy to GitHub Pages
-        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+        if: ${{ steps.check-gh-pages.enabled == 'true' }}
         uses: actions/deploy-pages@v4
         with:
           artifact_name: web
