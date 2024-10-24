@@ -63,7 +63,7 @@ jobs:
 
               This repository does not have GitHub Pages enabled, with GitHub Actions as its source.
               Check the [repository settings](https://github.com/${{ github.repository }}/settings/pages).
-              EOF
+          EOF
               echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
