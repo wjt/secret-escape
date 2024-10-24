@@ -53,27 +53,27 @@ jobs:
       - build-web
     runs-on: ubuntu-latest
     steps:
-      - name: Check if enabled
-        id: check-gh-pages
-        run: |
-          if ( gh api "repos/${{ github.repository }}/pages" | jq --exit-status '.build_type == "workflow"' )
-          then
-              echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-              cat <<"EOF" >> "$GITHUB_STEP_SUMMARY"
-              ## Not published to GitHub Pages
+      # - name: Check if enabled
+      #   id: check-gh-pages
+      #   run: |
+      #     if ( gh api "repos/${{ github.repository }}/pages" | jq --exit-status '.build_type == "workflow"' )
+      #     then
+      #         echo "enabled=true" >> "$GITHUB_OUTPUT"
+      #     else
+      #         cat <<"EOF" >> "$GITHUB_STEP_SUMMARY"
+      #         ## Not published to GitHub Pages
 
-              This repository does not have GitHub Pages enabled, with GitHub Actions as its source.
-              Check the [repository settings](https://github.com/${{ github.repository }}/settings/pages).
-          EOF
-              echo "enabled=false" >> "$GITHUB_OUTPUT"
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
+      #         This repository does not have GitHub Pages enabled, with GitHub Actions as its source.
+      #         Check the [repository settings](https://github.com/${{ github.repository }}/settings/pages).
+      #     EOF
+      #         echo "enabled=false" >> "$GITHUB_OUTPUT"
+      #     fi
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
 
       - id: deploy-to-gh-pages
         name: Deploy to GitHub Pages
-        if: ${{ steps.check-gh-pages.enabled == 'true' }}
+          #  if: ${{ steps.check-gh-pages.enabled == 'true' }}
         uses: actions/deploy-pages@v4
         with:
           artifact_name: web
