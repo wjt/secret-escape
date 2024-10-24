@@ -63,7 +63,7 @@ jobs:
               echo "enabled=true" >> "$GITHUB_OUTPUT"
             else
               echo "build type must be workflow"
-            if
+            fi
           else
             echo "Pages not enabled"
             echo "$output"
